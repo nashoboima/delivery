@@ -1,5 +1,6 @@
 package ru.ddd.delivery.core.domain.model.courier;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import lombok.AccessLevel;
@@ -21,7 +22,6 @@ public final class StoragePlace extends BaseEntity<UUID> {
     @Getter
     private int totalVolume;
 
-    @Getter
     private UUID orderId;
 
     private StoragePlace(String name, int volume) {
@@ -69,6 +69,10 @@ public final class StoragePlace extends BaseEntity<UUID> {
 
     public boolean isOccupied() {
         return orderId != null;
+    }
+
+    public Optional<UUID> getOrderId() {
+        return Optional.ofNullable(orderId);
     }
 
     public static class Errors {
