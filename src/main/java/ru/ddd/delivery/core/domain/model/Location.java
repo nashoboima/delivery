@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import ru.ddd.libs.ddd.ValueObject;
 import ru.ddd.libs.errs.Err;
 import ru.ddd.libs.errs.Error;
-import ru.ddd.libs.errs.GeneralErrors;
+import ru.ddd.libs.errs.Except;
 import ru.ddd.libs.errs.Result;
 
 @Getter
@@ -47,10 +47,7 @@ public final class Location extends ValueObject<Location> {
     }
 
     public Result<Integer, Error> distanceTo(Location target) {
-        if (null == target) {
-            var err = GeneralErrors.valueIsRequired("target");
-            return Result.failure(err);
-        }
+        Except.againstNull(target, "target");
         if (this.equals(target)) return Result.success(0);
 
         int xDistance = Math.abs(this.x - target.getX());
