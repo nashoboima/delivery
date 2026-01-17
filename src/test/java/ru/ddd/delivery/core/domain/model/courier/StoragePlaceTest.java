@@ -11,17 +11,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import ru.ddd.delivery.core.domain.model.Volume;
+
 public class StoragePlaceTest {
     @SuppressWarnings("unused")
     static Stream<Object[]> invalidItemParams() {
-        return Stream.of(new Object[] { "Backpack", 0 }, new Object[] { "Backpack", -1 });
+        return Stream.of(
+            new Object[] { null, Volume.create(20).getValue() },
+            new Object[] { "Backpack", null });
     }
 
     @Test
     void shouldBeCorrectWhenParamsAreCorrectOnCreated() {
         // Arrange
         String name = "Backpack";
-        int volume = 20;
+        Volume volume = Volume.create(20).getValue();
         
         // Act
         var result = StoragePlace.create(name, volume);
@@ -37,27 +41,13 @@ public class StoragePlaceTest {
 
     @ParameterizedTest
     @MethodSource("invalidItemParams")
-    void shouldReturnErrorWhenVolumeIsNotCorrectOnCreated(String name, int volume) {
-        // Arrange
-
-        // Act
-        var result = StoragePlace.create(name, volume);
-
-        // Assert
-        assertAll(
-            () -> assertThat(result.isSuccess()).isFalse(),
-            () -> assertThat(result.getError()).isNotNull()
-        );
-    }
-
-    @Test
-    void shouldThrowExceptionWhenNameIsNullOnCreated() {
+    void shouldThrowExceptionWhenParamsAreNullOnCreated(String name, Volume volume) {
         // Arrange
 
         // Act & Assert
         IllegalArgumentException exception =  assertThrows(
                 IllegalArgumentException.class,
-                () -> StoragePlace.create(null, 20)
+                () -> StoragePlace.create(name, volume)
         );
 
         assertNotNull(exception.getMessage());
@@ -67,11 +57,11 @@ public class StoragePlaceTest {
     void shouldReturnCanStoreWhenStoragePlaceIsNotOccupiedAndNotExceededTotalVolume() {
         // Arrange
         String name = "Backpack";
-        int volume = 20;
+        Volume volume = Volume.create(20).getValue();
         var storagePlace = StoragePlace.create(name, volume).getValue();
         
         // Act
-        Boolean canStore = storagePlace.canStore(10).getValue();
+        Boolean canStore = storagePlace.canStore(Volume.create(10).getValue()).getValue();
 
         // Assert
         assertThat(canStore).isTrue();
@@ -81,12 +71,12 @@ public class StoragePlaceTest {
     void shouldReturnCannotStoreWhenStoragePlaceIsOccupied() {
         // Arrange
         String name = "Backpack";
-        int volume = 20;
+        Volume volume = Volume.create(20).getValue();
         var storagePlace = StoragePlace.create(name, volume).getValue();
-        storagePlace.store(UUID.randomUUID(), 10);
+        storagePlace.store(UUID.randomUUID(), Volume.create(10).getValue());
         
         // Act
-        boolean canStore = storagePlace.canStore(10).getValue();
+        boolean canStore = storagePlace.canStore(Volume.create(10).getValue()).getValue();
 
         // Assert
         assertThat(canStore).isFalse();
@@ -96,11 +86,11 @@ public class StoragePlaceTest {
     void shouldReturnCannotStoreWhenExceededTotalVolume() {
         // Arrange
         String name = "Backpack";
-        int volume = 20;
+        Volume volume = Volume.create(20).getValue();
         var storagePlace = StoragePlace.create(name, volume).getValue();
         
         // Act
-        boolean canStore = storagePlace.canStore(30).getValue();
+        boolean canStore = storagePlace.canStore(Volume.create(30).getValue()).getValue();
 
         // Assert
         assertThat(canStore).isFalse();
@@ -110,11 +100,11 @@ public class StoragePlaceTest {
     void shouldStoreWhenStoragePlaceIsNotOccupiedAndNotExceededTotalVolume() {
         // Arrange
         String name = "Backpack";
-        int volume = 20;
+        Volume volume = Volume.create(20).getValue();
         var storagePlace = StoragePlace.create(name, volume).getValue();
         
         // Act
-        var result = storagePlace.store(UUID.randomUUID(), 10);
+        var result = storagePlace.store(UUID.randomUUID(), Volume.create(10).getValue());
 
         // Assert
         assertThat(result.isSuccess()).isTrue();
@@ -124,12 +114,12 @@ public class StoragePlaceTest {
     void shouldNotStoreWhenStoragePlaceIsOccupied() {
         // Arrange
         String name = "Backpack";
-        int volume = 20;
+        Volume volume = Volume.create(20).getValue();
         var storagePlace = StoragePlace.create(name, volume).getValue();
-        storagePlace.store(UUID.randomUUID(), 10);
+        storagePlace.store(UUID.randomUUID(), Volume.create(10).getValue());
         
         // Act
-        var result = storagePlace.store(UUID.randomUUID(), 15);
+        var result = storagePlace.store(UUID.randomUUID(), Volume.create(15).getValue());
 
         // Assert
         assertAll(
@@ -142,11 +132,11 @@ public class StoragePlaceTest {
     void shouldNotStoreWhenExceededTotalVolume() {
         // Arrange
         String name = "Backpack";
-        int volume = 20;
+        Volume volume = Volume.create(20).getValue();
         var storagePlace = StoragePlace.create(name, volume).getValue();
         
         // Act
-        var result = storagePlace.store(UUID.randomUUID(), 30);
+        var result = storagePlace.store(UUID.randomUUID(), Volume.create(30).getValue());
 
         // Assert
         assertAll(

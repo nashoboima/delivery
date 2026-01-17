@@ -11,15 +11,19 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import ru.ddd.delivery.core.domain.model.Location;
+import ru.ddd.delivery.core.domain.model.Speed;
+import ru.ddd.delivery.core.domain.model.Volume;
 import ru.ddd.delivery.core.domain.model.courier.Courier;
 
 public class OrderTest {
     @SuppressWarnings("unused")
     static Stream<Object[]> invalidItemParams() {
-        return Stream.of(new Object[] { null, Location.create(5, 5).getValue(), 20 }, new Object[] { UUID.randomUUID(), null, 20 });
+        return Stream.of(
+            new Object[] { null, Location.create(5, 5).getValue(), Volume.create(20).getValue() },
+            new Object[] { UUID.randomUUID(), null, Volume.create(20).getValue() },
+            new Object[] { UUID.randomUUID(), Location.create(5, 5).getValue(), null });
     }
 
     @Test
@@ -27,7 +31,7 @@ public class OrderTest {
         // Arrange
         UUID uuid = UUID.randomUUID();
         Location location = Location.create(5, 5).getValue();
-        int volume = 20;
+        Volume volume = Volume.create(20).getValue();
         
         // Act
         var result = Order.create(uuid, location, volume);
@@ -44,25 +48,8 @@ public class OrderTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = { 0, -1 })
-    void shouldReturnErrorWhenVolumeIsNotCorrectOnCreated(int volume) {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
-        Location location = Location.create(5, 5).getValue();
-
-        // Act
-        var result = Order.create(uuid, location, volume);
-
-        // Assert
-        assertAll(
-            () -> assertThat(result.isSuccess()).isFalse(),
-            () -> assertThat(result.getError()).isNotNull()
-        );
-    }
-
-    @ParameterizedTest
     @MethodSource("invalidItemParams")
-    void shouldThrowExceptionWhenParamsAreNullOnCreated(UUID orderId, Location location, int volume) {
+    void shouldThrowExceptionWhenParamsAreNullOnCreated(UUID orderId, Location location, Volume volume) {
         // Arrange
 
         // Act & Assert
@@ -77,8 +64,8 @@ public class OrderTest {
     @Test
     void shouldAssignCourier() {
         // Arrange
-        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 20).getValue();
-        var courier = Courier.create("k1", 2, Location.create(5, 5).getValue()).getValue();
+        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(20).getValue()).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(5, 5).getValue()).getValue();
         
         // Act
         var result = order.assign(courier);
@@ -94,8 +81,8 @@ public class OrderTest {
     @Test
     void shouldCompleteWhenAssigned() {
         // Arrange
-        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 20).getValue();
-        var courier = Courier.create("k1", 2, Location.create(5, 5).getValue()).getValue();
+        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(20).getValue()).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(5, 5).getValue()).getValue();
         order.assign(courier);
         
         // Act
@@ -111,7 +98,7 @@ public class OrderTest {
     @Test
     void shouldNotCompleteWhenNotAssigned() {
         // Arrange
-        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 20).getValue();
+        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(20).getValue()).getValue();
         
         // Act
         var result = order.complete();

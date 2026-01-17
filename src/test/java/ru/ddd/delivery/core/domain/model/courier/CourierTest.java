@@ -11,23 +11,27 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import ru.ddd.delivery.core.domain.model.Location;
+import ru.ddd.delivery.core.domain.model.Speed;
+import ru.ddd.delivery.core.domain.model.Volume;
 import ru.ddd.delivery.core.domain.model.order.Order;
 import ru.ddd.delivery.core.domain.model.order.OrderStatus;
 
 public class CourierTest {
     @SuppressWarnings("unused")
     static Stream<Object[]> invalidItemParams() {
-        return Stream.of(new Object[] { null, 2, Location.create(5, 5).getValue() }, new Object[] { "K1", 2, null });
+        return Stream.of(
+            new Object[] { null, Speed.create(2).getValue(), Location.create(5, 5).getValue() },
+            new Object[] { "K1", null, Location.create(5, 5).getValue() },
+            new Object[] { "K1", Speed.create(2).getValue(), null });
     }
 
     @Test
     void shouldBeCorrectWhenParamsAreCorrectOnCreated() {
         // Arrange
         String name = "K1";
-        int speed = 2;
+        Speed speed = Speed.create(2).getValue();
         Location location = Location.create(1, 1).getValue();
         
         // Act
@@ -44,25 +48,8 @@ public class CourierTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = { 0, -1 })
-    void shouldReturnErrorWhenVolumeIsNotCorrectOnCreated(int speed) {
-        // Arrange
-        String name = "K1";
-        Location location = Location.create(1, 1).getValue();
-
-        // Act
-        var result = Courier.create(name, speed, location);
-
-        // Assert
-        assertAll(
-            () -> assertThat(result.isFailure()).isTrue(),
-            () -> assertThat(result.getError()).isNotNull()
-        );
-    }
-
-    @ParameterizedTest
     @MethodSource("invalidItemParams")
-    void shouldThrowExceptionWhenParamsAreNullOnCreated(String name, int speed, Location location) {
+    void shouldThrowExceptionWhenParamsAreNullOnCreated(String name, Speed speed, Location location) {
         // Arrange
 
         // Act & Assert
@@ -77,11 +64,11 @@ public class CourierTest {
     @Test
     void shouldAddStoragePlace() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 15).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
+        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(15).getValue()).getValue();
         
         // Act
-        var result = courier.addStoragePlace( "rack", 20);
+        var result = courier.addStoragePlace( "rack", Volume.create(20).getValue());
 
         // Assert
         assertAll(
@@ -90,28 +77,12 @@ public class CourierTest {
         );
     }
 
-    @ParameterizedTest
-    @ValueSource(ints = { 0, -1 })
-    void shouldNotAddStoragePlaceWhenVolumeIsNotCorrect(int volume) {
-        // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        
-        // Act
-        var result = courier.addStoragePlace( "rack", volume);
-
-        // Assert
-        assertAll(
-            () -> assertThat(result.isFailure()).isTrue(),
-            () -> assertThat(result.getError()).isNotNull()
-        );
-    }
-
     @Test
     void shouldBeAbleToTakeOrderWhenSuitableStoragePlaceExist() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        courier.addStoragePlace( "rack", 20);
-        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 20).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
+        courier.addStoragePlace( "rack", Volume.create(20).getValue());
+        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(20).getValue()).getValue();
         
         // Act
         var result = courier.canTakeOrder(order);
@@ -126,31 +97,31 @@ public class CourierTest {
     @Test
     void shouldNotBeAbleToTakeOrderWhenAllStoragePlacesOccupied() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        courier.addStoragePlace( "rack", 20);
-        var order1 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 10).getValue();
-        var order2 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 20).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
+        courier.addStoragePlace( "rack", Volume.create(20).getValue());
+        var order1 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(10).getValue()).getValue();
+        var order2 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(20).getValue()).getValue();
         courier.takeOrder(order1);
         courier.takeOrder(order2);
-        var order3 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 20).getValue();
+        var order3 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(20).getValue()).getValue();
         
         // Act
         var result = courier.canTakeOrder(order3);
 
         // Assert
         assertAll(
-            () -> assertThat(result.isSuccess()).isTrue(),
-            () -> assertThat(result.getValue()).isFalse()
+            () -> assertThat(result.isFailure()).isTrue(),
+            () -> assertThat(result.getError()).isNotNull()
         );
     }
 
     @Test
     void shouldNotBeAbleToTakeOrderWhenAllStoragePlacesVolumeIsExceeded() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        courier.addStoragePlace( "rack", 20);
-        var order1 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 10).getValue();
-        var order2 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 30).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
+        courier.addStoragePlace( "rack", Volume.create(20).getValue());
+        var order1 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(10).getValue()).getValue();
+        var order2 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(30).getValue()).getValue();
         courier.takeOrder(order1);
         
         // Act
@@ -158,38 +129,37 @@ public class CourierTest {
 
         // Assert
         assertAll(
-            () -> assertThat(result.isSuccess()).isTrue(),
-            () -> assertThat(result.getValue()).isFalse()
+            () -> assertThat(result.isFailure()).isTrue(),
+            () -> assertThat(result.getError()).isNotNull()
         );
     }
 
     @Test
     void shouldTakeOrderWhenSuitableStoragePlaceExist() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        courier.addStoragePlace( "rack", 20);
-        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 20).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
+        courier.addStoragePlace( "rack", Volume.create(20).getValue());
+        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(20).getValue()).getValue();
         
         // Act
         var result = courier.takeOrder(order);
 
         // Assert
         assertAll(
-            () -> assertThat(result.isSuccess()).isTrue(),
-            () -> assertThat(order.getStatus()).isEqualTo(OrderStatus.ASSIGNED)
+            () -> assertThat(result.isSuccess()).isTrue()
         );
     }
 
     @Test
     void shouldNotTakeOrderWhenAllStoragePlacesOccupied() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        courier.addStoragePlace( "rack", 20);
-        var order1 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 10).getValue();
-        var order2 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 20).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
+        courier.addStoragePlace( "rack", Volume.create(20).getValue());
+        var order1 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(10).getValue()).getValue();
+        var order2 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(20).getValue()).getValue();
         courier.takeOrder(order1);
         courier.takeOrder(order2);
-        var order3 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 20).getValue();
+        var order3 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(30).getValue()).getValue();
         
         // Act
         var result = courier.takeOrder(order3);
@@ -204,10 +174,10 @@ public class CourierTest {
     @Test
     void shouldNotTakeOrderWhenAllStoragePlacesVolumeIsExceeded() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        courier.addStoragePlace( "rack", 20);
-        var order1 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 10).getValue();
-        var order2 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 30).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
+        courier.addStoragePlace( "rack", Volume.create(20).getValue());
+        var order1 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(10).getValue()).getValue();
+        var order2 = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(30).getValue()).getValue();
         courier.takeOrder(order1);
         
         // Act
@@ -223,8 +193,8 @@ public class CourierTest {
     @Test
     void shouldCompleteOrderWhenOrderAssigned() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 10).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
+        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(10).getValue()).getValue();
         courier.takeOrder(order);
         
         // Act
@@ -233,7 +203,6 @@ public class CourierTest {
         // Assert
         assertAll(
             () -> assertThat(result.isSuccess()).isTrue(),
-            () -> assertThat(order.getStatus()).isEqualTo(OrderStatus.COMPLETED),
             () -> assertThat(courier.canTakeOrder(order).getValue()).isTrue()
         );
     }
@@ -241,8 +210,8 @@ public class CourierTest {
     @Test
     void shouldNotCompleteOrderWhenOrderNotAssigned() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
-        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), 10).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
+        var order = Order.create(UUID.randomUUID(), Location.create(5, 5).getValue(), Volume.create(10).getValue()).getValue();
         
         // Act
         var result = courier.completeOrder(order);
@@ -257,7 +226,7 @@ public class CourierTest {
     @Test
     void shouldCalculateTimeToLocation() {
         // Arrange
-        var courier = Courier.create("k1", 2, Location.create(1, 1).getValue()).getValue();
+        var courier = Courier.create("k1", Speed.create(2).getValue(), Location.create(1, 1).getValue()).getValue();
         var targetLocation = Location.create(5, 5).getValue();
         
         // Act

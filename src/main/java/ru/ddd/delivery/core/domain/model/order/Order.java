@@ -6,9 +6,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import ru.ddd.delivery.core.domain.model.Location;
+import ru.ddd.delivery.core.domain.model.Volume;
 import ru.ddd.delivery.core.domain.model.courier.Courier;
 import ru.ddd.libs.ddd.Aggregate;
-import ru.ddd.libs.errs.Err;
 import ru.ddd.libs.errs.Error;
 import ru.ddd.libs.errs.Except;
 import ru.ddd.libs.errs.Result;
@@ -21,7 +21,7 @@ public final class Order extends Aggregate<UUID> {
     private final Location location;
 
     @Getter
-    private final int volume;
+    private final Volume volume;
 
     @Getter
     private OrderStatus status;
@@ -29,18 +29,17 @@ public final class Order extends Aggregate<UUID> {
     @Getter
     private UUID courierId;
 
-    private Order(UUID orderId, Location location, int volume) {
+    private Order(UUID orderId, Location location, Volume volume) {
         super(orderId);
         this.location = location;
         this.volume = volume;
         status = OrderStatus.CREATED;
     }
 
-    public static Result<Order, Error> create(UUID orderId, Location location, int volume) {
+    public static Result<Order, Error> create(UUID orderId, Location location, Volume volume) {
         Except.againstNull(orderId, "orderId");
         Except.againstNull(location, "location");
-        var err = Err.againstZeroOrNegative(volume, "volume");
-        if (err != null) return Result.failure(err);
+        Except.againstNull(volume, "volume");
 
         var order = new Order(orderId, location, volume);
         return Result.success(order);

@@ -9,9 +9,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import ru.ddd.delivery.core.domain.model.Location;
+import ru.ddd.delivery.core.domain.model.Speed;
+import ru.ddd.delivery.core.domain.model.Volume;
 import ru.ddd.delivery.core.domain.model.order.Order;
 import ru.ddd.libs.ddd.Aggregate;
-import ru.ddd.libs.errs.Err;
 import ru.ddd.libs.errs.Error;
 import ru.ddd.libs.errs.Except;
 import ru.ddd.libs.errs.GeneralErrors;
@@ -25,14 +26,14 @@ public final class Courier extends Aggregate<UUID> {
     private final String name;
 
     @Getter
-    private final int speed;
+    private final Speed speed;
 
     @Getter
     private Location location;
 
     private List<StoragePlace> storagePlaces;
 
-    private Courier(String name, int speed, Location location, StoragePlace storagePlace) {
+    private Courier(String name, Speed speed, Location location, StoragePlace storagePlace) {
         super(UUID.randomUUID());
         this.name = name;
         this.speed = speed;
@@ -41,24 +42,30 @@ public final class Courier extends Aggregate<UUID> {
         storagePlaces.add(storagePlace);
     }
 
-    public static Result<Courier, Error> create(String name, int speed, Location location) {
+    public static Result<Courier, Error> create(String name, Speed speed, Location location) {
         Except.againstNull(name, "name");
-        var err = Err.againstZeroOrNegative(speed, "speed");
-        if (err != null) return Result.failure(err);
+        Except.againstNull(speed, "speed");
         Except.againstNull(location, "location");
 
-        var createBagResult = StoragePlace.create("bag", 10);
-        if (createBagResult.isFailure()) {
-            return Result.failure(createBagResult.getError());
+        var addDefaultStoragePlaceResult = addDefaultStoragePlace();
+        if (addDefaultStoragePlaceResult.isFailure()) {
+            return Result.failure(addDefaultStoragePlaceResult.getError());
         }
-        var courier = new Courier(name, speed, location, createBagResult.getValue());
+        var courier = new Courier(name, speed, location, addDefaultStoragePlaceResult.getValue());
         return Result.success(courier);
     }
 
-    public UnitResult<Error> addStoragePlace(String name, int volume) {
+    private static Result<StoragePlace, Error> addDefaultStoragePlace() {
+        var createVolumeResult = Volume.create(10);
+        if (createVolumeResult.isFailure()) {
+            return Result.failure(createVolumeResult.getError());
+        }
+        return StoragePlace.create("Рюкзак", createVolumeResult.getValue());
+    }
+
+    public UnitResult<Error> addStoragePlace(String name, Volume volume) {
         Except.againstNull(name, "name");
-        var err = Err.againstZeroOrNegative(volume, "volume");        
-        if (err != null) return UnitResult.failure(err);
+        Except.againstNull(volume, "volume");
         
         var createStoragePlaceResult = StoragePlace.create(name, volume);
         if (createStoragePlaceResult.isFailure()) {
@@ -73,6 +80,9 @@ public final class Courier extends Aggregate<UUID> {
         Except.againstNull(order, "order");
 
         boolean canTakeOrder = storagePlaces.stream().anyMatch(s -> s.canStore(order.getVolume()).getValue());
+        if (!canTakeOrder) {
+            return Result.failure(Errors.noSuitableStoragePlaces());
+        }
 
         return Result.success(canTakeOrder);
     }
@@ -89,11 +99,6 @@ public final class Courier extends Aggregate<UUID> {
         UnitResult<Error> storeResult = suitableStoragePlace.get().store(order.getId(), order.getVolume());
         if (storeResult.isFailure()) {
             return UnitResult.failure(storeResult.getError());
-        }
-
-        UnitResult<Error> assignResult = order.assign(this);
-        if (assignResult.isFailure()) {
-            return UnitResult.failure(assignResult.getError());
         }
 
         return UnitResult.success();
@@ -118,11 +123,6 @@ public final class Courier extends Aggregate<UUID> {
         if (clearResult.isFailure()) {
             return UnitResult.failure(clearResult.getError());
         }
-
-        UnitResult<Error> completeResult = order.complete();
-        if (completeResult.isFailure()) {
-            return UnitResult.failure(completeResult.getError());
-        }
         
         return UnitResult.success();
     }
@@ -135,7 +135,7 @@ public final class Courier extends Aggregate<UUID> {
             return Result.failure(distanceResult.getError());
         }
 
-        double timeToLocation = Math.ceil(distanceResult.getValue()/speed);
+        double timeToLocation = Math.ceil(distanceResult.getValue()/speed.getValue());
         return Result.success(timeToLocation);
     }
 
@@ -146,7 +146,7 @@ public final class Courier extends Aggregate<UUID> {
 
         int difX = target.getX() - location.getX();
         int difY = target.getY() - location.getY();
-        int cruisingRange = speed;
+        int cruisingRange = speed.getValue();
 
         int moveX = Math.max(-cruisingRange, Math.min(difX, cruisingRange));
         cruisingRange -= Math.abs(moveX);
