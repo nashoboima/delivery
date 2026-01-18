@@ -48,6 +48,10 @@ public final class Order extends Aggregate<UUID> {
     public UnitResult<Error> assign(Courier courier) {
         Except.againstNull(courier, "courier");
         
+        if (status != OrderStatus.CREATED) {
+            return UnitResult.failure(Errors.orderNotInCreatedStatus(status));
+        }
+        
         status = OrderStatus.ASSIGNED;
 
         courierId = courier.getId();
@@ -67,6 +71,11 @@ public final class Order extends Aggregate<UUID> {
         public static Error orderWasNotAssigned() {
             return Error.of("order.was.not.assigned",
                             "Заказ не был назначен");
+        }
+
+        public static Error orderNotInCreatedStatus(OrderStatus status) {
+            return Error.of("order.not.in.created.status",
+                            "Заказ не в статусе CREATED. Статус: " + status.toValue());
         }
     }
 }
