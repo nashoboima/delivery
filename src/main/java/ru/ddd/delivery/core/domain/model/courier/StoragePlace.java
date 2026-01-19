@@ -1,12 +1,13 @@
 package ru.ddd.delivery.core.domain.model.courier;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import ru.ddd.delivery.core.domain.model.Volume;
 import ru.ddd.libs.ddd.BaseEntity;
-import ru.ddd.libs.errs.Err;
 import ru.ddd.libs.errs.Error;
 import ru.ddd.libs.errs.Except;
 import ru.ddd.libs.errs.Result;
@@ -19,41 +20,37 @@ public final class StoragePlace extends BaseEntity<UUID> {
     private final String name;
 
     @Getter
-    private int totalVolume;
+    private Volume totalVolume;
 
-    @Getter
     private UUID orderId;
 
-    private StoragePlace(String name, int volume) {
+    private StoragePlace(String name, Volume volume) {
         super(UUID.randomUUID());
         this.name = name;
         this.totalVolume = volume;
     }
 
-    public static Result<StoragePlace, Error> create(String name, int volume) {
+    public static Result<StoragePlace, Error> create(String name, Volume volume) {
         Except.againstNull(name, "name");
-        var err = Err.againstZeroOrNegative(volume, "volume");
-        if (err != null) return Result.failure(err);
+        Except.againstNull(volume, "volume");
 
         var storagePlace = new StoragePlace(name, volume);
         return Result.success(storagePlace);
     }
 
-    public Result<Boolean, Error> canStore(int volume) {
-        var err = Err.againstZeroOrNegative(volume, "volume");
-        if (err != null) return Result.failure(err);
+    public Result<Boolean, Error> canStore(Volume volume) {
+        Except.againstNull(volume, "volume");
 
-        boolean canStore = (null == orderId) && (volume <= totalVolume);
+        boolean canStore = (null == orderId) && (volume.getValue() <= totalVolume.getValue());
         return Result.success(canStore);
     }
 
-    public UnitResult<Error> store(UUID orderId, int volume) {
+    public UnitResult<Error> store(UUID orderId, Volume volume) {
         Except.againstNull(orderId, "orderId");
-        var err = Err.againstZeroOrNegative(volume, "volume");        
-        if (err != null) return UnitResult.failure(err);
+        Except.againstNull(volume, "volume");
         
         if (this.orderId != null) return UnitResult.failure(Errors.storagePlaceIsOccupied());
-        if (volume > totalVolume) return UnitResult.failure(Errors.storagePlaceVolumeIsExceeded(totalVolume));
+        if (volume.getValue() > totalVolume.getValue()) return UnitResult.failure(Errors.storagePlaceVolumeIsExceeded(totalVolume.getValue()));
 
         this.orderId = orderId;
         return UnitResult.success();
@@ -69,6 +66,10 @@ public final class StoragePlace extends BaseEntity<UUID> {
 
     public boolean isOccupied() {
         return orderId != null;
+    }
+
+    public Optional<UUID> getOrderId() {
+        return Optional.ofNullable(orderId);
     }
 
     public static class Errors {
