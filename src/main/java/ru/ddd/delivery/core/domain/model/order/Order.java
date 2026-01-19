@@ -2,6 +2,12 @@ package ru.ddd.delivery.core.domain.model.order;
 
 import java.util.UUID;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,18 +20,25 @@ import ru.ddd.libs.errs.Except;
 import ru.ddd.libs.errs.Result;
 import ru.ddd.libs.errs.UnitResult;
 
+@Entity
+@Table(name = "orders")
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public final class Order extends Aggregate<UUID> {
 
+    @Embedded
     @Getter
     private final Location location;
 
+    @Embedded
     @Getter
     private final Volume volume;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_status")
     @Getter
     private OrderStatus status;
 
+    @Column(name = "courier_id")
     @Getter
     private UUID courierId;
 

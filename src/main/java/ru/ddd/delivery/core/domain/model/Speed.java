@@ -2,6 +2,8 @@ package ru.ddd.delivery.core.domain.model;
 
 import java.util.List;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,11 +13,13 @@ import ru.ddd.libs.errs.Err;
 import ru.ddd.libs.errs.Error;
 import ru.ddd.libs.errs.Result;
 
+@Embeddable
 @Getter
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Speed extends ValueObject<Speed> {
 
+    @Column(name = "speed_value", nullable = false)
     private final int value;
 
     public static Result<Speed, Error> create(int value) {
