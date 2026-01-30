@@ -1,13 +1,12 @@
 package ru.ddd.delivery.core.domain.model.courier;
 
+import java.util.UUID;
+import java.util.stream.Stream;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.util.UUID;
-import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -16,7 +15,6 @@ import ru.ddd.delivery.core.domain.model.Location;
 import ru.ddd.delivery.core.domain.model.Speed;
 import ru.ddd.delivery.core.domain.model.Volume;
 import ru.ddd.delivery.core.domain.model.order.Order;
-import ru.ddd.delivery.core.domain.model.order.OrderStatus;
 
 public class CourierTest {
     @SuppressWarnings("unused")

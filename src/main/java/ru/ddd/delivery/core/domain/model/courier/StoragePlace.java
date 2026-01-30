@@ -3,6 +3,9 @@ package ru.ddd.delivery.core.domain.model.courier;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,15 +16,20 @@ import ru.ddd.libs.errs.Except;
 import ru.ddd.libs.errs.Result;
 import ru.ddd.libs.errs.UnitResult;
 
+@Entity
+@Table(name = "storageplaces")
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public final class StoragePlace extends BaseEntity<UUID> {
 
+    @Column(name = "name", columnDefinition = "VARCHAR(255)")
     @Getter
     private final String name;
 
+    @Column(name = "total_volume")
     @Getter
     private Volume totalVolume;
 
+    @Column(name = "order_id")
     private UUID orderId;
 
     private StoragePlace(String name, Volume volume) {

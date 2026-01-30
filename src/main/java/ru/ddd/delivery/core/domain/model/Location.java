@@ -2,6 +2,8 @@ package ru.ddd.delivery.core.domain.model;
 
 import java.util.List;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,6 +14,7 @@ import ru.ddd.libs.errs.Error;
 import ru.ddd.libs.errs.Except;
 import ru.ddd.libs.errs.Result;
 
+@Embeddable
 @Getter
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -22,11 +25,13 @@ public final class Location extends ValueObject<Location> {
     /**
      * Горизонталь
      */
+    @Column(name = "location_x", nullable = false)
     private final int x;
 
     /**
      * Вертикаль
      */
+    @Column(name = "location_y", nullable = false)
     private final int y;
 
     public static final Location MIN_VALUE = new Location(COORDINATE_MIN_VALUE, COORDINATE_MIN_VALUE);

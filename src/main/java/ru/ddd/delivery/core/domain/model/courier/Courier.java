@@ -5,6 +5,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,18 +26,25 @@ import ru.ddd.libs.errs.GeneralErrors;
 import ru.ddd.libs.errs.Result;
 import ru.ddd.libs.errs.UnitResult;
 
+@Entity
+@Table(name = "couriers")
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public final class Courier extends Aggregate<UUID> {
 
+    @Column(name = "name", columnDefinition = "VARCHAR(255)")
     @Getter
     private final String name;
 
+    @Embedded
     @Getter
     private final Speed speed;
 
+    @Embedded
     @Getter
     private Location location;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "courier_id")
     private List<StoragePlace> storagePlaces;
 
     private Courier(String name, Speed speed, Location location, StoragePlace storagePlace) {
