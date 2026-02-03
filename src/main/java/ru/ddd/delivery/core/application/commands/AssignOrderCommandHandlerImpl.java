@@ -26,18 +26,18 @@ public class AssignOrderCommandHandlerImpl implements AssignOrderCommandHandler 
     public UnitResult<Error> handle() {
         var assignableCouriers = courierRepository.findAllAssignableCouriers();
         if (assignableCouriers.isEmpty()) {
-            UnitResult.success();
+            return UnitResult.success();
         }
 
         var orderOpt = orderRepository.findRandomWithCreatedStatus();
         if (orderOpt.isEmpty()) {
-            UnitResult.success();
+            return UnitResult.success();
         }
 
         var order = orderOpt.get();
         var dispatchResult = orderDispatcher.dispatch(order, assignableCouriers);
         if (dispatchResult.isFailure()) {
-            UnitResult.failure(dispatchResult.getError());
+            return UnitResult.failure(dispatchResult.getError());
         }
 
         var courier = dispatchResult.getValue();

@@ -28,7 +28,7 @@ public class MoveCommandHandlerImpl implements MoveCommandHandler {
         // Если нет доставляемых(назначенных) товаров, то не двигаем курьеров
         var assignedOrders = orderRepository.findAllAssigned();
         if (assignedOrders.isEmpty()) {
-            UnitResult.success();
+            return UnitResult.success();
         }
 
         for(Order order: assignedOrders){
@@ -47,7 +47,12 @@ public class MoveCommandHandlerImpl implements MoveCommandHandler {
                 if (completeResult.isFailure()) {
                     return UnitResult.failure(completeResult.getError());
                 }
-                courier.completeOrder(order);
+                orderRepository.save(order);
+                var completeOrderResult = courier.completeOrder(order);
+                if (completeOrderResult.isFailure()) {
+                    return UnitResult.failure(completeOrderResult.getError());
+                }
+                courierRepository.save(courier);
             }
         }
         return UnitResult.success();
