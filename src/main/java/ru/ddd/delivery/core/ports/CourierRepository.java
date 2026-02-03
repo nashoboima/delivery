@@ -16,4 +16,6 @@ public interface CourierRepository {
 
     public void clean();
 
+    public List<Courier> findAll();
+
 }

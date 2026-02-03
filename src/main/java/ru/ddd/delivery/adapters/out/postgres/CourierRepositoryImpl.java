@@ -38,4 +38,9 @@ public class CourierRepositoryImpl implements CourierRepository {
         jpa.deleteAll();
     }
 
+    @Override
+    public List<Courier> findAll() {
+        return jpa.findAll();
+    }
+
 }

@@ -18,7 +18,7 @@ import ru.ddd.delivery.core.domain.model.order.Order;
 import ru.ddd.delivery.core.ports.CourierRepository;
 
 @SpringBootTest
-@ActiveProfiles("test") 
+@ActiveProfiles("test")
 public class CourierRepositoryIntegrationTest extends BasePostgresContainerTest {
 
     @Autowired
