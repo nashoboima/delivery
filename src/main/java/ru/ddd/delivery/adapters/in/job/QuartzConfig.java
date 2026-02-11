@@ -5,6 +5,7 @@ import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,7 +21,7 @@ public class QuartzConfig {
     }
 
     @Bean
-    public Trigger assignOrdersTrigger(JobDetail assignOrdersJobDetail) {
+    public Trigger assignOrdersTrigger(@Qualifier("assignOrdersJobDetail")JobDetail assignOrdersJobDetail) {
         return TriggerBuilder.newTrigger()
                 .forJob(assignOrdersJobDetail)
                 .withIdentity("assignOrdersTrigger")
@@ -39,7 +40,7 @@ public class QuartzConfig {
     }
 
     @Bean
-    public Trigger moveCouriersTrigger(JobDetail moveCouriersJobDetail) {
+    public Trigger moveCouriersTrigger(@Qualifier("moveCouriersJobDetail")JobDetail moveCouriersJobDetail) {
         return TriggerBuilder.newTrigger()
                 .forJob(moveCouriersJobDetail)
                 .withIdentity("moveCouriersTrigger")
