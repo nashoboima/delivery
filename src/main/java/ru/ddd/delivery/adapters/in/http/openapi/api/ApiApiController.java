@@ -10,10 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import jakarta.annotation.Generated;
 import jakarta.validation.Valid;
 import ru.ddd.delivery.adapters.in.http.openapi.mappers.CourierMapper;
 import ru.ddd.delivery.adapters.in.http.openapi.mappers.OrderMapper;
@@ -29,35 +27,39 @@ import ru.ddd.delivery.core.application.commands.CreateOrderCommandHandler;
 import ru.ddd.delivery.core.application.queries.GetAllCouriersQueryHandler;
 import ru.ddd.delivery.core.application.queries.GetAllIncompleteOrdersQueryHandler;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-09T21:18:13.892080390+03:00[Europe/Moscow]", comments = "Generator version: 7.19.0")
+@CrossOrigin(origins = "*")
 @Controller
-@CrossOrigin(origins = "*") // Добавьте это
-@RequestMapping("${openapi.swaggerDelivery.base-path:}")
 public class ApiApiController implements ApiApi {
 
     private final NativeWebRequest request;
 
-    @Autowired
-    private CreateCourierCommandHandler createCourierCommandHandler;
-
-    @Autowired
-    private CreateOrderCommandHandler createOrderCommandHandler;
-
-    @Autowired
-    private GetAllCouriersQueryHandler getAllCouriersQueryHandler;
-
-    @Autowired
-    private CourierMapper courierMapper;
-
-    @Autowired
-    private GetAllIncompleteOrdersQueryHandler getAllIncompleteOrdersQueryHandler;
+    private final CreateCourierCommandHandler createCourierCommandHandler;
     
-    @Autowired
-    private OrderMapper orderMapper;
+    private final CreateOrderCommandHandler createOrderCommandHandler;
 
-    @Autowired
-    public ApiApiController(NativeWebRequest request) {
+    private final GetAllCouriersQueryHandler getAllCouriersQueryHandler;
+
+    private final CourierMapper courierMapper;
+
+    private final GetAllIncompleteOrdersQueryHandler getAllIncompleteOrdersQueryHandler;
+    
+    private final OrderMapper orderMapper;
+
+    public ApiApiController(
+        NativeWebRequest request,
+        CreateCourierCommandHandler createCourierCommandHandler,
+        CreateOrderCommandHandler createOrderCommandHandler,
+        GetAllCouriersQueryHandler getAllCouriersQueryHandler,
+        CourierMapper courierMapper,
+        GetAllIncompleteOrdersQueryHandler getAllIncompleteOrdersQueryHandler,
+        OrderMapper orderMapper) {
         this.request = request;
+        this.createCourierCommandHandler = createCourierCommandHandler;
+        this.createOrderCommandHandler = createOrderCommandHandler;
+        this.getAllCouriersQueryHandler = getAllCouriersQueryHandler;
+        this.courierMapper = courierMapper;
+        this.getAllIncompleteOrdersQueryHandler = getAllIncompleteOrdersQueryHandler;
+        this.orderMapper = orderMapper;
     }
 
     @Override
