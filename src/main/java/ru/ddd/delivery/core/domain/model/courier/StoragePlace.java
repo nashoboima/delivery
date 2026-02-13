@@ -66,7 +66,7 @@ public final class StoragePlace extends BaseEntity<UUID> {
 
     public UnitResult<Error> clear(UUID orderid) {
         Except.againstNull(orderId, "orderId");
-        if (this.orderId != orderid) return UnitResult.failure(Errors.orderIdIsWrong(this.orderId));
+        if (!this.orderId.equals(orderid)) return UnitResult.failure(Errors.orderIdIsWrong(this.orderId));
         
         this.orderId = null;
         return UnitResult.success();
