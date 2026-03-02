@@ -1,12 +1,11 @@
 package ru.ddd.delivery.core.application.commands;
 
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ru.ddd.delivery.core.domain.model.Location;
+import ru.ddd.delivery.core.GeoClient;
 import ru.ddd.delivery.core.domain.model.Volume;
 import ru.ddd.delivery.core.domain.model.order.Order;
 import ru.ddd.delivery.core.ports.OrderRepository;
@@ -16,9 +15,11 @@ import ru.ddd.libs.errs.Result;
 @Service
 public class CreateOrderCommandHandlerImpl implements CreateOrderCommandHandler {
     private final OrderRepository orderRepository;
+    private final GeoClient geoClient;
 
-    public CreateOrderCommandHandlerImpl(OrderRepository orderRepository) {
+    public CreateOrderCommandHandlerImpl(OrderRepository orderRepository, GeoClient geoClient) {
         this.orderRepository = orderRepository;
+        this.geoClient = geoClient;
     }
 
     @Transactional
@@ -27,17 +28,15 @@ public class CreateOrderCommandHandlerImpl implements CreateOrderCommandHandler 
         // Восстанавливаем агрегат, если нет, то создаем
         var orderOpt = orderRepository.findById(command.getOrderId());
         if (orderOpt.isEmpty()) {
-            int randomX = ThreadLocalRandom.current().nextInt(1, 11);
-            int randomY = ThreadLocalRandom.current().nextInt(1, 11);
-            var createLocationResult = Location.create(randomX, randomY);
-            if (createLocationResult.isFailure()) {
-                return Result.failure(createLocationResult.getError());
+            var getLocationResult = geoClient.getLocation(command.getStreet());
+            if (getLocationResult.isFailure()) {
+                return Result.failure(getLocationResult.getError());
             }
             var createVolumeResult = Volume.create(command.getVolume());
             if (createVolumeResult.isFailure()) {
                 return Result.failure(createVolumeResult.getError());
             }
-            var orderCreateResult = Order.create(command.getOrderId(), createLocationResult.getValue(), createVolumeResult.getValue());
+            var orderCreateResult = Order.create(command.getOrderId(), getLocationResult.getValue(), createVolumeResult.getValue());
             if (orderCreateResult.isFailure())
                 return Result.failure(orderCreateResult.getError());
             var order = orderCreateResult.getValue();
