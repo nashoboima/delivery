@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.ddd.delivery.core.domain.model.order.Order;
 import ru.ddd.delivery.core.ports.CourierRepository;
 import ru.ddd.delivery.core.ports.OrderRepository;
+import ru.ddd.libs.ddd.DomainEventPublisher;
 import ru.ddd.libs.errs.Error;
 import ru.ddd.libs.errs.GeneralErrors;
 import ru.ddd.libs.errs.UnitResult;
@@ -16,10 +17,12 @@ import ru.ddd.libs.errs.UnitResult;
 public class MoveCommandHandlerImpl implements MoveCommandHandler {
     private final CourierRepository courierRepository;
     private final OrderRepository orderRepository;
+    private final DomainEventPublisher domainEventPublisher;
 
-    public MoveCommandHandlerImpl(CourierRepository courierRepository, OrderRepository orderRepository) {
+    public MoveCommandHandlerImpl(CourierRepository courierRepository, OrderRepository orderRepository, DomainEventPublisher domainEventPublisher) {
         this.courierRepository = courierRepository;
         this.orderRepository = orderRepository;
+        this.domainEventPublisher = domainEventPublisher;
     }
 
     @Transactional
@@ -55,6 +58,9 @@ public class MoveCommandHandlerImpl implements MoveCommandHandler {
                 courierRepository.save(courier);
             }
         }
+        
+        domainEventPublisher.publish(assignedOrders);
+
         return UnitResult.success();
         
     }

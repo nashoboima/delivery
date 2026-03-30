@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 import ru.ddd.delivery.core.domain.model.Location;
 import ru.ddd.delivery.core.domain.model.Volume;
 import ru.ddd.delivery.core.domain.model.courier.Courier;
+import ru.ddd.delivery.core.domain.model.order.events.OrderCompletedDomainEvent;
+import ru.ddd.delivery.core.domain.model.order.events.OrderCreatedDomainEvent;
 import ru.ddd.libs.ddd.Aggregate;
 import ru.ddd.libs.errs.Error;
 import ru.ddd.libs.errs.Except;
@@ -55,6 +57,9 @@ public final class Order extends Aggregate<UUID> {
         Except.againstNull(volume, "volume");
 
         var order = new Order(orderId, location, volume);
+        
+        order.raiseDomainEvent(new OrderCreatedDomainEvent(order));
+
         return Result.success(order);
     }
 
@@ -77,6 +82,9 @@ public final class Order extends Aggregate<UUID> {
         }
         
         status = OrderStatus.COMPLETED;
+
+        raiseDomainEvent(new OrderCompletedDomainEvent(this));
+
         return UnitResult.success();
     }
 

@@ -1,5 +1,6 @@
 package ru.ddd.delivery.core.application.commands;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import ru.ddd.delivery.core.GeoClient;
 import ru.ddd.delivery.core.domain.model.Volume;
 import ru.ddd.delivery.core.domain.model.order.Order;
 import ru.ddd.delivery.core.ports.OrderRepository;
+import ru.ddd.libs.ddd.DomainEventPublisher;
 import ru.ddd.libs.errs.Error;
 import ru.ddd.libs.errs.Result;
 
@@ -16,10 +18,12 @@ import ru.ddd.libs.errs.Result;
 public class CreateOrderCommandHandlerImpl implements CreateOrderCommandHandler {
     private final OrderRepository orderRepository;
     private final GeoClient geoClient;
+    private final DomainEventPublisher domainEventPublisher;
 
-    public CreateOrderCommandHandlerImpl(OrderRepository orderRepository, GeoClient geoClient) {
+    public CreateOrderCommandHandlerImpl(OrderRepository orderRepository, GeoClient geoClient, DomainEventPublisher domainEventPublisher) {
         this.orderRepository = orderRepository;
         this.geoClient = geoClient;
+        this.domainEventPublisher = domainEventPublisher;
     }
 
     @Transactional
@@ -42,6 +46,8 @@ public class CreateOrderCommandHandlerImpl implements CreateOrderCommandHandler 
             var order = orderCreateResult.getValue();
 
             orderRepository.save(order);
+
+            domainEventPublisher.publish(List.of(order));
 
             return Result.success(order.getId());
         }
