@@ -15,6 +15,8 @@ public final class Error {
     }
 
     public static Error of(String code, String message) {
+        Objects.requireNonNull(code);
+        Objects.requireNonNull(message);
         return new Error(code, message);
     }
 
@@ -42,6 +44,19 @@ public final class Error {
         }
 
         return new Error(parts[0], parts[1]);
+    }
+
+    /**
+     * Бросает DomainInvariantException.
+     * Используется в местах, где ошибка невозможна по контракту.
+     */
+//    public void throwException() {
+//        throw new DomainInvariantException(this);
+//    }
+
+    public static void throwIf(Error error) {
+        if (error != null)
+            throw new DomainInvariantException(error);
     }
 
     @Override
